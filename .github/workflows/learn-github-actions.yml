@@ -31,6 +31,14 @@ jobs:
       - run: echo "Building and testing the application..."
         env:
           BATS_DIR: ${{ needs.config-run-dev.outputs.bats-dir }}
+      - run: uname -a
+      - run: lsb_release -c
+      - run: pwd
+      - run: tree
+      - run: ls
+      - run: gcc -v
+      - run: gdb -v
+      
 
   deploy:
     runs-on: ubuntu-latest
@@ -39,6 +47,8 @@ jobs:
       - run: echo "Deploying the application..."
         env:
           BATS_DIR: ${{ needs.build-and-test.outputs.bats-dir }}
+      - run: gcc hello.c -o hello
+      - run: ./hello
 
 # 缓存步骤
   cache:
