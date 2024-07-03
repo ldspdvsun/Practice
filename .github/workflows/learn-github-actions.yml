@@ -11,3 +11,42 @@ jobs:
           node-version: '20'
       - run: npm install -g bats
       - run: bats -v
+    # 将 bats 安装目录缓存起来，以便后续的 job 使用
+    outputs:
+      bats-dir: ${{ steps.cache-bats.outputs.path }}
+
+  config-run-dev:
+    runs-on: ubuntu-latest
+    needs: check-bats-version
+    steps:
+      # 从前一个 job 的输出中获取 bats 安装目录
+      - run: echo "Using bats from ${{ needs.check-bats-version.outputs.bats-dir }}"
+        env:
+          BATS_DIR: ${{ needs.check-bats-version.outputs.bats-dir }}
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: config-run-dev
+    steps:
+      - run: echo "Building and testing the application..."
+        env:
+          BATS_DIR: ${{ needs.config-run-dev.outputs.bats-dir }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - run: echo "Deploying the application..."
+        env:
+          BATS_DIR: ${{ needs.build-and-test.outputs.bats-dir }}
+
+# 缓存步骤
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache bats installation directory
+        id: cache-bats
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.check-bats-version.outputs.bats-dir }}
+          key: ${{ runner.os }}-bats-${{ hashFiles('**/package-lock.json') }}
